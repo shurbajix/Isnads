@@ -1,0 +1,79 @@
+name: isnad
+description: "A new Flutter project."
+
+publish_to: 'none' 
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+
+  cupertino_icons: ^1.0.2
+  flutter_screenutil: ^5.9.0
+  smooth_page_indicator: ^1.1.0
+  nice_intro: ^0.2.1
+  font_awesome_flutter: ^10.6.0
+  file_picker: ^6.1.1
+  table_calendar: ^3.0.9
+  intl: ^0.18.0
+  flutter_timezone: ^1.0.8
+  share_plus: ^7.2.1
+  flutter_gradient_app_bar: ^0.3.1
+  image_picker: ^1.0.7
+  avatar_stack: ^1.2.0
+  webview_flutter: ^4.4.4
+  http:
+  fl_chart: ^0.66.0
+  syncfusion_flutter_charts: ^24.1.47+2
+  syncfusion_flutter_sliders: ^24.1.47
+  circular_chart_flutter: ^0.0.2
+  auto_size_text: ^3.0.0
+  google_maps_flutter: ^2.5.3
+  simple_animation_progress_bar: "^1.6.0"
+  
+  
+ 
+  
+  
+  
+  
+  
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  
+  flutter_lints: ^3.0.1
+
+
+flutter:
+
+ 
+  uses-material-design: true
+
+  fonts:
+     - family: NotoKufiArabic
+       fonts:
+       - asset: assets/font/NotoKufiArabic-Regular.ttf
+  
+  assets:
+     - assets/images/obc/
+     - assets/drawer/
+     - assets/images/
+     - assets/images/rigester/
+     - assets/images/vectors/
+     - assets/images/drawer/
+     - assets/images/bottomnavbar/
+     - assets/images/rigester/
+    
+      
+
+  
