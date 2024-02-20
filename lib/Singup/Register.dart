@@ -1,10 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:isnad/OTPcode/OTP.dart';
+import 'package:get/get.dart';
+import 'package:isnad/Service/api_Service.dart';
+import 'package:isnad/Singup/Rigester_API/Rigester_API.dart';
 import 'package:isnad/log/login.dart';
-
-import 'createteam.dart';
+import 'package:http/http.dart' as http;
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -14,6 +16,20 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
+  bool isPasswordVisible1 = false; // Visibility flag for first password field
+  bool isPasswordVisible2 = false; // Visibility flag for second password field
+
+  final List<GlobalKey<FormState>> _formKeys = List.generate(
+    4,
+    (index) => GlobalKey<FormState>(),
+  );
+  final TextEditingController _fullNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+  final RigesterAPIcontroll registerController = Get.put(RigesterAPIcontroll());
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,14 +74,12 @@ class _RegisterState extends State<Register> {
               ),
               SizedBox(
                 child: ListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: 4,
                   shrinkWrap: true,
                   scrollDirection: Axis.vertical,
                   itemBuilder: (context, index) {
-                    bool? isPassword = index >=
-                        2; // Check if the current TextFormField is for a password
-                    bool? isPasswordVisible =
-                        false; // State variable to track password visibility
+                    bool isPassword = index >= 2;
 
                     return Padding(
                       padding: const EdgeInsets.only(
@@ -75,40 +89,68 @@ class _RegisterState extends State<Register> {
                       ),
                       child: SizedBox(
                         width: 317.w,
-                        height: 56,
-                        child: TextFormField(
-                          obscureText: isPassword ? !isPasswordVisible : false,
-                          textAlign: TextAlign.end,
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
+                        height: 56.h,
+                        child: Form(
+                          key: _formKeys[index],
+                          child: TextFormField(
+                            controller: index == 0
+                                ? _fullNameController
+                                : index == 1
+                                    ? _emailController
+                                    : index == 2
+                                        ? _passwordController
+                                        : _confirmPasswordController,
+                            obscureText: isPassword
+                                ? index == 2
+                                    ? !isPasswordVisible1 // Use visibility flag for first password field
+                                    : !isPasswordVisible2 // Use visibility flag for second password field
+                                : false,
+                            textAlign: TextAlign.end,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              suffixIcon: imagesrigestertextfiled[index],
+                              prefixIcon: isPassword
+                                  ? (index == 2 || index == 3)
+                                      ? IconButton(
+                                          icon: Icon(
+                                            index == 2
+                                                ? isPasswordVisible1
+                                                    ? Icons.visibility
+                                                    : Icons.visibility_off
+                                                : isPasswordVisible2
+                                                    ? Icons.visibility
+                                                    : Icons.visibility_off,
+                                            color: Colors.grey,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              if (index == 2) {
+                                                isPasswordVisible1 =
+                                                    !isPasswordVisible1;
+                                              } else {
+                                                isPasswordVisible2 =
+                                                    !isPasswordVisible2;
+                                              }
+                                            });
+                                          },
+                                        )
+                                      : null
+                                  : null,
+                              hintText: textrigestertextfiled[index],
+                              hintStyle: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                fontFamily: 'NotoKufiArabic',
+                              ),
                             ),
-                            suffixIcon: imagesrigestertextfiled[index],
-                            prefixIcon: isPassword
-                                ? (index == 2 || index == 3)
-                                    ? IconButton(
-                                        icon: Icon(
-                                          isPasswordVisible
-                                              ? Icons.visibility
-                                              : Icons.visibility_off,
-                                          color: Colors.grey,
-                                        ),
-                                        onPressed: () {
-                                          // Toggle password visibility for the corresponding password field
-                                          setState(() {
-                                            isPasswordVisible =
-                                                isPasswordVisible;
-                                          });
-                                        },
-                                      )
-                                    : null
-                                : null,
-                            hintText: textrigestertextfiled[index],
-                            hintStyle: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: 'NotoKufiArabic',
-                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return subtitletextfiled[index];
+                              }
+                              return null;
+                            },
                           ),
                         ),
                       ),
@@ -117,17 +159,10 @@ class _RegisterState extends State<Register> {
                 ),
               ),
               SizedBox(
-                height: 40.h,
+                height: 10.h,
               ),
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SignIn(),
-                    ),
-                  );
-                },
+                onTap: _rigesterWithEmail, // Call the register function
                 child: Container(
                   width: 271.w,
                   height: 58,
@@ -167,8 +202,8 @@ class _RegisterState extends State<Register> {
               Center(
                 child: SizedBox(
                   width: 290.w,
-                  //height: 56.h,
                   child: ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: 2,
                     shrinkWrap: true,
                     itemBuilder: (context, index) {
@@ -242,7 +277,7 @@ class _RegisterState extends State<Register> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const OTP(),
+                                builder: (context) => const SignIn(),
                               ),
                             );
                           },
@@ -257,9 +292,25 @@ class _RegisterState extends State<Register> {
       ),
     );
   }
+
+  void _rigesterWithEmail() async {
+    try {
+      bool isAllValid =
+          _formKeys.every((formKey) => formKey.currentState!.validate());
+
+      if (!isAllValid) {
+        return;
+      }
+
+      // Call the rigesterWithEmail method of RigesterAPIcontroll
+      await registerController.rigesterWithEmail();
+    } catch (e) {
+      print('Error: $e');
+      // Handle error as needed
+    }
+  }
 }
 
-// icons from figma file that add
 List imagesrigestertextfiled = [
   Image.asset(
     'assets/images/rigester/Profile.png',
@@ -274,10 +325,24 @@ List imagesrigestertextfiled = [
     'assets/images/rigester/Password.png',
   ),
 ];
-// add rigester text for all textfiled using one list
+
 List<String> textrigestertextfiled = [
   'الاسم بالكامل',
   'البديد الالكتروني',
   'كلمة المرور',
   'اعادة كلمة المرور',
+];
+
+List<String> subtitletextfiled = [
+  'please enter your full Name',
+  'please enter your Email',
+  'please enter your password',
+  'please enter your password',
+];
+
+List<String> textbuttons = ['تسجيل الدخول بالفيس بوك', 'تسجيل الدخول بالجوجل'];
+
+List<String> iconsbutton = [
+  'assets/images/google.png',
+  'assets/images/facebook.png',
 ];

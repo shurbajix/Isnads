@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:isnad/Home/Home.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import 'Splash Screen.dart';
@@ -111,7 +112,6 @@ class _HomeState extends State<Obsscreen> {
                   Center(
                     child: SmoothPageIndicator(
                       controller: controller,
-                      
                       count: Imageandandtext.imageandandtext.length,
                       effect: const WormEffect(
                         spacing: 16,

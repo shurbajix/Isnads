@@ -2,7 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:isnad/Home/Home.dart';
 import 'package:isnad/obsscreen/Splash%20Screen.dart';
+import 'package:isnad/pages/profile/profile.dart';
 import 'package:simple_animation_progress_bar/simple_animation_progress_bar.dart';
 
 class Spalsh extends StatefulWidget {
@@ -22,14 +24,17 @@ class _SpalshState extends State<Spalsh> with SingleTickerProviderStateMixin {
     super.initState();
     _duration = Duration.zero; // Initialize duration
 
-    Future.delayed(const Duration(seconds: 5), () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const Splash_Screen(),
-        ),
-      );
-    });
+    Future.delayed(
+      const Duration(seconds: 5),
+      () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const Home(),
+          ),
+        );
+      },
+    );
 
     _controller = AnimationController(
       vsync: this,

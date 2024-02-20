@@ -1,17 +1,17 @@
 import 'dart:convert';
 
-LoginAPI loginAPI(String str) => LoginAPI.fromJson(
-      json.decode(str),
-    );
+Login_as_Individuals login_as_organizationJson(String str) =>
+  Login_as_Individuals.fromJson(json.decode(str));
 
-class LoginAPI {
+
+class Login_as_Individuals {
   bool? success;
   Data? data;
   String? message;
 
-  LoginAPI.dart({this.success, this.data, this.message});
+  Login_as_Individuals({this.success, this.data, this.message});
 
-  LoginAPI.fromJson(Map<String, dynamic> json) {
+  Login_as_Individuals.fromJson(Map<String, dynamic> json) {
     success = json['success'];
     data = json['data'] != null ? Data.fromJson(json['data']) : null;
     message = json['message'];
@@ -34,12 +34,7 @@ class Data {
   String? tokenType;
   String? expiresAt;
 
-  Data({
-    this.accessToken,
-    this.user,
-    this.tokenType,
-    this.expiresAt,
-  });
+  Data({this.accessToken, this.user, this.tokenType, this.expiresAt});
 
   Data.fromJson(Map<String, dynamic> json) {
     accessToken = json['access_token'];
@@ -62,7 +57,9 @@ class Data {
 
 class User {
   int? id;
-  String? name;
+  String? firstName;
+  String? lastName;
+  String? fullName;
   String? email;
   String? callingCode;
   String? mobile;
@@ -74,7 +71,9 @@ class User {
 
   User(
       {this.id,
-      this.name,
+      this.firstName,
+      this.lastName,
+      this.fullName,
       this.email,
       this.callingCode,
       this.mobile,
@@ -86,7 +85,9 @@ class User {
 
   User.fromJson(Map<String, dynamic> json) {
     id = json['id'];
-    name = json['name'];
+    firstName = json['first_name'];
+    lastName = json['last_name'];
+    fullName = json['full_name'];
     email = json['email'];
     callingCode = json['calling_code'];
     mobile = json['mobile'];
@@ -102,7 +103,9 @@ class User {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
-    data['name'] = name;
+    data['first_name'] = firstName;
+    data['last_name'] = lastName;
+    data['full_name'] = fullName;
     data['email'] = email;
     data['calling_code'] = callingCode;
     data['mobile'] = mobile;
@@ -118,7 +121,7 @@ class User {
 }
 
 class OrganizationType {
-  int? id;
+  Null id;
   String? title;
   String? image;
   int? sort;

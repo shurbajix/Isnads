@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:isnad/Event/Event_Details.dart';
 import 'package:isnad/Home/Home.dart';
 
@@ -31,10 +32,10 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (_, child) {
-        return MaterialApp(
+        return GetMaterialApp(
           routes: {
             '/': (context) => const Spalsh(),
-            '/Obsscreen': (context) => const Obsscreen(),
+            '/Home': (context) => const Home(),
           },
           debugShowCheckedModeBanner: false,
         );

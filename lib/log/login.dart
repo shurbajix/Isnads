@@ -1,12 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:http/http.dart' as http;
 import 'package:isnad/Home/Home.dart';
 import 'package:isnad/log/forget_password.dart';
 
 import '../OTPcode/OTP.dart';
 import '../Singup/Register.dart';
+import 'Login_as_Organization/Login_as_Organization.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({super.key});
@@ -17,7 +21,10 @@ class SignIn extends StatefulWidget {
 
 class _SignInState extends State<SignIn> {
   bool? isAPIcallProcess = false;
-  GlobalKey<FormState> globalKey = GlobalKey<FormState>();
+  final List<GlobalKey<FormState>> _formKeys = [
+    GlobalKey<FormState>(),
+    GlobalKey<FormState>(),
+  ];
   bool? _lights = false;
   bool _obscureText = true;
   final bool _isVisible = false;
@@ -25,8 +32,77 @@ class _SignInState extends State<SignIn> {
   String? _password;
   void _toggle() {
     setState(() {
-      _obscureText = _obscureText;
+      _obscureText = !_obscureText;
     });
+  }
+
+  void _handleLogin(String email, String password) async {
+    // Declare loginResponse variable
+    late Login_as_Organization loginResponse;
+
+    // Validate the form
+    for (var formKey in _formKeys) {
+      if (formKey.currentState!.validate()) {
+        // If the form is valid, proceed with login
+        formKey.currentState!.save();
+      } else {
+        // If the form is invalid, return
+        return;
+      }
+    }
+
+    try {
+      // Perform login API call
+      var response = await http.post(
+        Uri.parse('https://isnad.gavakw.com/api/auth/login'),
+        body: {
+          // Add your login parameters here, for example:
+          'email': email,
+          'password': password,
+        },
+      );
+
+      // Check if the response is successful
+      if (response.statusCode == 200) {
+        var jsonResponse = json.decode(response.body);
+
+        // Parse the response
+        loginResponse = Login_as_Organization.fromJson(jsonResponse);
+
+        // Check if login was successful
+        if (loginResponse.success == true) {
+          // Navigate to home screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const Home(),
+            ),
+          );
+        } else {
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(loginResponse.message ?? 'Login failed'),
+            ),
+          );
+        }
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to login. Please try again later.'),
+          ),
+        );
+      }
+    } catch (e) {
+      // Handle exceptions
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('An error occurred. Please try again later.'),
+        ),
+      );
+    }
   }
 
   @override
@@ -46,21 +122,16 @@ class _SignInState extends State<SignIn> {
                   ),
                 ),
               ),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.all(20.0),
-                    child: Text(
-                      'تسجيل الدخول',
-                      style: TextStyle(
-                        color: Color(0xff120D26),
-                        fontSize: 25,
-                        fontFamily: 'NotoKufiArabic',
-                      ),
-                    ),
+              const Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Text(
+                  'تسجيل الدخول',
+                  style: TextStyle(
+                    color: Color(0xff120D26),
+                    fontSize: 25,
+                    fontFamily: 'NotoKufiArabic',
                   ),
-                ],
+                ),
               ),
               Center(
                 child: SizedBox(
@@ -75,32 +146,45 @@ class _SignInState extends State<SignIn> {
                         child: Padding(
                           padding: const EdgeInsets.all(10.0),
                           child: Form(
-                            key: globalKey,
+                            key: _formKeys[index],
                             child: TextFormField(
                               obscureText: !isVisible!,
+                              onChanged: (value) {
+                                if (index == 1) {
+                                  _password = value;
+                                }
+                              },
                               decoration: InputDecoration(
                                 suffixIcon: Image.asset(
                                   iconesd[index],
                                 ),
                                 prefixIcon: index == 1
                                     ? IconButton(
-                                        icon: Icon(isVisible
-                                            ? Icons.visibility
-                                            : Icons.visibility_off),
-                                        onPressed: () => setState(
-                                          () {
-                                            if (index == 1) {
-                                              _passwordVisible =
-                                                  !_passwordVisible!;
-                                            }
-                                          },
+                                        icon: Icon(
+                                          isVisible
+                                              ? Icons.visibility
+                                              : Icons.visibility_off,
                                         ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _passwordVisible =
+                                                !_passwordVisible!;
+                                          });
+                                        },
                                       )
                                     : null,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
+                              validator: (value) {
+                                if (value!.isEmpty) {
+                                  return index == 0
+                                      ? 'Please enter your email'
+                                      : 'Please enter your password';
+                                }
+                                return null;
+                              },
                             ),
                           ),
                         ),
@@ -167,12 +251,10 @@ class _SignInState extends State<SignIn> {
               Center(
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Home(),
-                      ),
-                    );
+                    // Call the method to handle login
+                    setState(() {
+                      _handleLogin;
+                    });
                   },
                   child: Container(
                     width: 271.w,
@@ -182,7 +264,6 @@ class _SignInState extends State<SignIn> {
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Row(
-                      //mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         Center(
@@ -196,9 +277,7 @@ class _SignInState extends State<SignIn> {
                           ),
                         ),
                         CircleAvatar(
-                          backgroundColor: const Color(
-                            0xff6E9033,
-                          ),
+                          backgroundColor: const Color(0xff6E9033),
                           child: Image.asset(
                             'assets/images/Shape.png',
                           ),
@@ -224,8 +303,8 @@ class _SignInState extends State<SignIn> {
               Center(
                 child: SizedBox(
                   width: 290.w,
-                  //height: 56.h,
                   child: ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: 2,
                     shrinkWrap: true,
                     itemBuilder: (context, index) {
@@ -237,17 +316,14 @@ class _SignInState extends State<SignIn> {
                             onTap: () {},
                             child: Container(
                               decoration: BoxDecoration(
-                                color: const Color(
-                                  0xffFFFFFF,
-                                ),
+                                color: const Color(0xffFFFFFF),
                                 borderRadius: BorderRadius.circular(10),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.grey.withOpacity(0.5),
                                     spreadRadius: 2,
                                     blurRadius: 5,
-                                    offset: const Offset(
-                                        0, 2), // changes position of shadow
+                                    offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
@@ -324,7 +400,7 @@ List<String> textbuttons = [
   'تسجيل الدخول بواسطة جوجل',
   'تسجيل الدخول بواسطة فيسبوك',
 ];
-// this list add image from figma desgin for the app
+// this list add image from figma design for the app
 List<dynamic> iconsbutton = [
   'assets/images/google.png',
   'assets/images/facebook.png',

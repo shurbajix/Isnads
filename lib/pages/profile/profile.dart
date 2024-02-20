@@ -1,14 +1,17 @@
+import 'dart:convert';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:isnad/Event/event_edit.dart';
+import 'package:isnad/pages/profile/class_profile.dart';
 import 'package:isnad/pages/profile/profile_edit.dart';
-
+import 'package:http/http.dart' as http;
 import '../../teams/all_Teams.dart';
 import '../../teams/edit_team.dart';
 
 class Profile extends StatefulWidget {
-  const Profile({super.key});
+  const Profile({super.key, bool? success, Data? data, String? message});
 
   @override
   State<Profile> createState() => _ProfileState();
@@ -21,6 +24,31 @@ class _ProfileState extends State<Profile> {
   bool isReadMore = false;
   bool isFirstButtonSelected = true;
   bool isSecondButtonSelected = false;
+  final Profile profile = Profile(
+    success: true,
+    data: Data(
+      fullName: 'full_name', // Change this to the full name received from API
+    ),
+    message: 'Profile fetched successfully',
+  );
+  late Future<Data> _profileData;
+
+  @override
+  void initState() {
+    super.initState();
+    _profileData = fetchProfileData();
+  }
+
+  Future<Data> fetchProfileData() async {
+    final response =
+        await http.get(Uri.parse('https://isnad.gavakw.com/api/user/profile'));
+    if (response.statusCode == 200) {
+      return Data.fromJson(jsonDecode(response.body)['data']);
+    } else {
+      throw Exception('Failed to load profile data');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final maxline = isReadMore ? null : 5;
@@ -88,6 +116,7 @@ class _ProfileState extends State<Profile> {
                                 ),
                               ),
                               const AutoSizeText(
+                                //profile.data['full_name'].toString(),
                                 "هذا النص هو مثال لنص يمكن أن يستبدل في نفس المساحة، لقد تم توليد هذا النص من",
                                 textAlign: TextAlign.end,
                                 maxLines: 4,
@@ -189,262 +218,275 @@ class _ProfileState extends State<Profile> {
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          children: [
-            const CircleAvatar(
-              radius: 50,
-              backgroundImage: AssetImage(
-                'assets/images/circle.png',
-              ),
-            ),
-            SizedBox(
-              height: 10.h,
-            ),
-            const Text(
-              'اسم المستخدم',
-              style: TextStyle(
-                color: Color(0xff120D26),
-                fontSize: 24,
-                fontStyle: FontStyle.italic,
-                fontFamily: 'NotoKufiArabic',
-              ),
-            ),
-            SizedBox(
-              height: 7.h,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Column(
-                  children: [
-                    Text(
-                      '350',
-                      style: TextStyle(
-                        color: const Color(0xff120D26),
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(
-                      height: 9.h,
-                    ),
-                    Text(
-                      'متابعة',
-                      style: TextStyle(
-                        color: const Color(0xff747688),
-                        fontSize: 14.sp,
-                        fontFamily: 'NotoKufiArabic',
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  width: 9.w,
-                ),
-                const VerticalDivider(
-                  endIndent: 3,
-                  indent: 3,
-                  thickness: 5,
-                  color: Colors.black,
-                ),
-                SizedBox(
-                  width: 9.w,
-                ),
-                Column(
-                  children: [
-                    Text(
-                      '346',
-                      style: TextStyle(
-                        color: const Color(0xff120D26),
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(
-                      height: 9.h,
-                    ),
-                    Text(
-                      'متابعون',
-                      style: TextStyle(
-                        color: const Color(0xff747688),
-                        fontSize: 14.sp,
-                        fontFamily: 'NotoKufiArabic',
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            SizedBox(
-              height: 21.h,
-            ),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const Profile_Edit(),
+      body: FutureBuilder<Data>(
+        future: _profileData,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            final Data profileData = snapshot.data!;
+            return Center(
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundImage: NetworkImage(profileData.image ?? ''),
                   ),
-                );
-              },
-              child: Container(
-                width: 127.w,
-                height: 50.h,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: const Color(0xff6E9033),
+                  SizedBox(
+                    height: 10.h,
                   ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text(
-                      'تعديل',
-                      style: TextStyle(
-                        color: const Color(0xff455727),
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: 'NotoKufiArabic',
-                      ),
+                  Text(
+                    profileData.fullName ?? '',
+                    style: const TextStyle(
+                      color: Color(0xff120D26),
+                      fontSize: 24,
+                      fontStyle: FontStyle.italic,
+                      fontFamily: 'NotoKufiArabic',
                     ),
-                    Image.asset(
-                      'assets/images/edit.png',
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 20.h,
-            ),
-            Text(
-              'بيانات شخصية',
-              style: TextStyle(
-                fontSize: 20.sp,
-                color: Colors.black,
-                fontFamily: 'NotoKufiArabic',
-              ),
-            ),
-            Text(
-              isReadMore ? description : description.substring(0, 40),
-              textAlign: TextAlign.center,
-              maxLines: maxline,
-              style: TextStyle(
-                color: const Color(0xff3C3E56),
-                fontSize: 14.sp,
-                fontFamily: 'NotoKufiArabic',
-              ),
-            ),
-            IconButton(
-              onPressed: () {
-                setState(() {
-                  isReadMore = isReadMore;
-                });
-              },
-              icon: Icon(
-                isReadMore ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                color: const Color(
-                  0xff5669FF,
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 20.h,
-            ),
-            Expanded(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: 2,
-                itemBuilder: (context, index) {
-                  String buttonText =
-                      index == 0 ? 'اضافة مبادرة جديدة' : "عرض جميع المبادرات";
-                  String buttonimage = index == 0
-                      ? 'assets/images/plus.png'
-                      : 'assets/images/up.png';
-                  return LayoutBuilder(
-                    builder: (_, c) {
-                      final width = c.maxWidth;
-                      var fontSize = 16.0;
-                      if (width <= 480) {
-                        fontSize = 16.0;
-                      } else if (width > 480 && width <= 960) {
-                        fontSize = 22.0;
-                      } else {
-                        fontSize = 28.0;
-                      }
-                      return Padding(
-                        padding: const EdgeInsets.only(
-                          left: 10,
-                          right: 10,
-                          top: 20,
-                        ),
-                        child: SizedBox(
-                          width: 319.w,
-                          height: 58,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              backgroundColor: const Color(0xff455727),
-                            ),
-                            onPressed: () {
-                              if (index == 0) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const Editteam(),
-                                  ),
-                                );
-                              } else if (index == 1) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const All_Teams(),
-                                  ),
-                                );
-                              }
-                            },
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 30,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(15),
-                                    color: const Color(0xff6E9033),
-                                    image: DecorationImage(
-                                      image: AssetImage(
-                                        buttonimage,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 20.w,
-                                ),
-                                Text(
-                                  buttonText,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 30,
-                                    fontFamily: 'NotoKufiArabic',
-                                  ),
-                                ),
-                              ],
+                  ),
+                  SizedBox(
+                    height: 7.h,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Column(
+                        children: [
+                          Text(
+                            '350',
+                            style: TextStyle(
+                              color: const Color(0xff120D26),
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
+                          SizedBox(
+                            height: 9.h,
+                          ),
+                          Text(
+                            'متابعة',
+                            style: TextStyle(
+                              color: const Color(0xff747688),
+                              fontSize: 14.sp,
+                              fontFamily: 'NotoKufiArabic',
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        width: 9.w,
+                      ),
+                      const VerticalDivider(
+                        endIndent: 3,
+                        indent: 3,
+                        thickness: 5,
+                        color: Colors.black,
+                      ),
+                      SizedBox(
+                        width: 9.w,
+                      ),
+                      Column(
+                        children: [
+                          Text(
+                            '346',
+                            style: TextStyle(
+                              color: const Color(0xff120D26),
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(
+                            height: 9.h,
+                          ),
+                          Text(
+                            'متابعون',
+                            style: TextStyle(
+                              color: const Color(0xff747688),
+                              fontSize: 14.sp,
+                              fontFamily: 'NotoKufiArabic',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 21.h,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const Profile_Edit(),
                         ),
                       );
                     },
-                  );
-                },
+                    child: Container(
+                      width: 127.w,
+                      height: 50.h,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color(0xff6E9033),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Text(
+                            'تعديل',
+                            style: TextStyle(
+                              color: const Color(0xff455727),
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'NotoKufiArabic',
+                            ),
+                          ),
+                          Image.asset(
+                            'assets/images/edit.png',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20.h,
+                  ),
+                  Text(
+                    'بيانات شخصية',
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      color: Colors.black,
+                      fontFamily: 'NotoKufiArabic',
+                    ),
+                  ),
+                  Text(
+                    isReadMore ? description : description.substring(0, 40),
+                    textAlign: TextAlign.center,
+                    maxLines: maxline,
+                    style: TextStyle(
+                      color: const Color(0xff3C3E56),
+                      fontSize: 14.sp,
+                      fontFamily: 'NotoKufiArabic',
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        isReadMore = isReadMore;
+                      });
+                    },
+                    icon: Icon(
+                      isReadMore ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                      color: const Color(
+                        0xff5669FF,
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20.h,
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: 2,
+                      itemBuilder: (context, index) {
+                        String buttonText = index == 0
+                            ? 'اضافة مبادرة جديدة'
+                            : "عرض جميع المبادرات";
+                        String buttonimage = index == 0
+                            ? 'assets/images/plus.png'
+                            : 'assets/images/up.png';
+                        return LayoutBuilder(
+                          builder: (_, c) {
+                            final width = c.maxWidth;
+                            var fontSize = 16.0;
+                            if (width <= 480) {
+                              fontSize = 16.0;
+                            } else if (width > 480 && width <= 960) {
+                              fontSize = 22.0;
+                            } else {
+                              fontSize = 28.0;
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                left: 10,
+                                right: 10,
+                                top: 20,
+                              ),
+                              child: SizedBox(
+                                width: 319.w,
+                                height: 58,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15),
+                                    ),
+                                    backgroundColor: const Color(0xff455727),
+                                  ),
+                                  onPressed: () {
+                                    if (index == 0) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const Editteam(),
+                                        ),
+                                      );
+                                    } else if (index == 1) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const All_Teams(),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 30,
+                                        height: 30,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                          color: const Color(0xff6E9033),
+                                          image: DecorationImage(
+                                            image: AssetImage(
+                                              buttonimage,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 20.w,
+                                      ),
+                                      Text(
+                                        buttonText,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 30,
+                                          fontFamily: 'NotoKufiArabic',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
+            );
+          } else if (snapshot.hasError) {
+            return Text("${snapshot.error}");
+          }
+          return const CircularProgressIndicator();
+        },
       ),
     );
   }
@@ -483,6 +525,8 @@ class _ProfileState extends State<Profile> {
     );
   }
 }
+
+
 // showModalBottomSheet<dynamic>(
 //                                     isScrollControlled: true,
 //                                     backgroundColor: Colors.white,

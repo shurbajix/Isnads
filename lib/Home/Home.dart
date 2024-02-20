@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
@@ -11,13 +12,13 @@ import 'package:isnad/pages/profile/addinitiative.dart';
 import 'package:isnad/teams/edit_team.dart';
 import 'package:isnad/util/utilhome.dart';
 
-import '../Event/event_edit.dart';
-import '../initiative/initative.dart';
 import '../navbar/Navbar.dart';
 import '../pages/calendar/calendar.dart';
 import '../pages/location/location.dart';
 import '../pages/news/news.dart';
 import '../pages/profile/profile.dart';
+import 'Home_API.dart';
+import 'package:http/http.dart' as http;
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -105,6 +106,25 @@ class _HomeState extends State<Home> {
     ];
 
     Timer? timer;
+    Home_API? homeData;
+
+    Future<void> fetchHomeData() async {
+      try {
+        final response =
+            await http.get(Uri.parse('https://isnad.gavakw.com/api/pages'));
+
+        if (response.statusCode == 200) {
+          final Map<String, dynamic> jsonResponse = json.decode(response.body);
+          setState(() {
+            homeData = Home_API.fromJson(jsonResponse);
+          });
+        } else {
+          throw Exception('Failed to load data');
+        }
+      } catch (error) {
+        print('Error fetching data: $error');
+      }
+    }
 
     @override
     void initState() {
@@ -116,6 +136,7 @@ class _HomeState extends State<Home> {
       });
 
       // Start the autoplay
+      fetchHomeData();
     }
 
     @override
@@ -152,153 +173,163 @@ class _HomeState extends State<Home> {
     List<Widget> currentList = isFirstButtonSelected
         ? []
         : List.generate(
-            10,
-            (index) => Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Container(
-                width: 332.w,
-                height: 120.h,
-                decoration: BoxDecoration(
-                  color: const Color(0xffFFFFFF),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.grey,
-                      offset: Offset(0.0, 1.0),
-                      blurRadius: 6.0,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          onPressed: () {},
-                          icon: Image.asset(
-                            'assets/images/close.png',
+            homeData?.data?.length ?? 0,
+            (index) {
+              final data = homeData!.data![index];
+              return Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Container(
+                  width: 332.w,
+                  height: 120.h,
+                  decoration: BoxDecoration(
+                    color: const Color(0xffFFFFFF),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.grey,
+                        offset: Offset(0.0, 1.0),
+                        blurRadius: 6.0,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            onPressed: () {},
+                            icon: Image.asset(
+                              'assets/images/close.png',
+                            ),
                           ),
-                        ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: Image.asset(
-                            'assets/images/bookmark.png',
+                          IconButton(
+                            onPressed: () {},
+                            icon: Image.asset(
+                              'assets/images/bookmark.png',
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 0.3,
-                        ),
+                        ],
+                      ),
+                      Expanded(
                         child: Padding(
-                          padding: const EdgeInsets.only(
-                            right: 10,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 0.3,
                           ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              const AutoSizeText(
-                                'مبادرة مؤسسة الخير',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xff060518),
-                                  fontFamily: 'NotoKufiArabic',
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              right: 10,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                AutoSizeText(
+                                  data.title ?? '',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xff060518),
+                                    fontFamily: 'NotoKufiArabic',
+                                  ),
                                 ),
-                              ),
-                              const AutoSizeText(
-                                "هذا النص هو مثال لنص يمكن أن يستبدل في نفس المساحة، لقد تم توليد هذا النص من",
-                                textAlign: TextAlign.end,
-                                maxLines: null,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                  fontFamily: 'NotoKufiArabic',
+                                AutoSizeText(
+                                  data.description ?? '',
+                                  textAlign: TextAlign.end,
+                                  maxLines: null,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    fontFamily: 'NotoKufiArabic',
+                                  ),
                                 ),
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  SizedBox(
-                                    width: 80.41.w,
-                                    height: 20.h,
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(6),
-                                        ),
-                                        backgroundColor:
-                                            const Color(0xff00BF4D),
-                                      ),
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const Event_Details(),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    SizedBox(
+                                      width: 80.41.w,
+                                      height: 20.h,
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(6),
                                           ),
-                                        );
-                                      },
-                                      child: const AutoSizeText(
-                                        'اشتراك',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          fontFamily: 'NotoKufiArabic',
+                                          backgroundColor:
+                                              const Color(0xff00BF4D),
+                                        ),
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const Event_Details(),
+                                            ),
+                                          );
+                                        },
+                                        child: const AutoSizeText(
+                                          'اشتراك',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            fontFamily: 'NotoKufiArabic',
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  // Add some spacing
-
-                                  Row(
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () {},
-                                        child: const Text(
-                                          '1 مايو 2023 3 عصرا',
-                                          textAlign: TextAlign.end,
-                                          style: TextStyle(
-                                            fontFamily: 'NotoKufiArabic',
-                                            fontSize: 11,
+                                    Row(
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () {},
+                                          child: const Text(
+                                            'move ',
+                                            textAlign: TextAlign.end,
+                                            style: TextStyle(
+                                              fontFamily: 'NotoKufiArabic',
+                                              fontSize: 11,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      GestureDetector(
-                                        onTap: () {},
-                                        child: const Icon(
-                                          Icons.calendar_month_rounded,
-                                          color: Color(0xff455727),
+                                        GestureDetector(
+                                          onTap: () {},
+                                          child: const Icon(
+                                            Icons.calendar_month_rounded,
+                                            color: Color(0xff455727),
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ],
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Center(
-                      child: Image.asset(
-                        'assets/images/meeting.png',
-                        scale: 0.8,
+                      Center(
+                        child: Image.asset(
+                          data.image ?? '',
+                          scale: 0.8,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           );
+
+    // if (homeData == null) {
+    //   // Return a loading indicator while data is being fetched
+    //   return const Scaffold(
+    //     body: Center(
+    //       child: CircularProgressIndicator(),
+    //     ),
+    //   );
+    // }
     return Scaffold(
       key: _scaffoldKey,
       endDrawer: const Drawerlist(),
@@ -365,8 +396,9 @@ class _HomeState extends State<Home> {
                   ),
                   Positioned(
                     top:
-                        110, // Adjust the top value to position it below the first Positioned widget
-                    left: 30,
+                        120, // Adjust the top value to position it below the first Positioned widget
+                    left: 20.w,
+                    right: 20.w,
                     child: Container(
                       height: 129,
                       width: 338,
